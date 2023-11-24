@@ -1,6 +1,6 @@
 { "id": "montyclock",
-  "name": "Monty clock",
-  "shortName":"monty",
+  "name": "Monty Clock",
+  "shortName":"Monty Clock",
   "version":"0.01",
   "description": "Clock consisting of 3 screens, default is Clock, left with information widget and right screen controls Music (iOS)",
   "icon": "app.png",
@@ -10,8 +10,8 @@
   "supports" : ["BANGLEJS2"],  
   "readme": "README.md",
   "storage": [
-    {"name":"monty.app.js","url":"monty.app.js"},
-    {"name":"monty.img","url":"monty-icon.js", "evaluate":true}
+    {"name":"monty.app.js","url":"app.js"},
+    {"name":"monty.img","url":"app-icon.js", "evaluate":true}
   ],
   "dependencies" : { "clock_info":"module" },
   "data": [{"name":"montyclock.json"}],
