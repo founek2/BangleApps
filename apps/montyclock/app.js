@@ -384,6 +384,8 @@
 
     const remove = function () {
       hide()
+      delete state.items
+      state.items = []
     }
 
     return {
