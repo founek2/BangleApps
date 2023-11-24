@@ -18,6 +18,8 @@ App consists of 3 screens:
 - right screen is for Music control (iOS only)
   - Displays current playing song - title, album, artist
 
+> Refreshing display is optimized as much as possible. Clock refreshes every minute, other screens only when necessary.
+
 ## Controls
 
 3 screens:
