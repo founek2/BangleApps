@@ -13,7 +13,7 @@
     {"name":"monty.app.js","url":"monty.app.js"},
     {"name":"monty.img","url":"monty-icon.js", "evaluate":true}
   ],
-  "dependencies" : { "clock_info":"module", "clkinfom": "clkinfo" },
+  "dependencies" : { "clock_info":"module" },
   "data": [{"name":"montyclock.json"}],
   "allow_emulator": true
 }
