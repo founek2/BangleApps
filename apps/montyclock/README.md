@@ -4,6 +4,10 @@
 ![Default clock screen](app-screenshot-screen1.png)
 ![Second music control screen](app-screenshot-screen2.png)
 
+## Setup
+
+In order for info widget to display Ram usage, module ["RAM Clock Info"](https://founek2.github.io/BangleApps/?q=clkinfom) needs to be installed.
+
 ## Usage and Features
 
 App consists of 3 screens:
