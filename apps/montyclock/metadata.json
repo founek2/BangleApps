@@ -4,7 +4,7 @@
   "version":"0.01",
   "description": "Clock consisting of 3 screens, default is Clock, left with information widget and right screen controls Music (iOS)",
   "icon": "app.png",
-  "screenshots" : [ { "url":"screenshot.png" } ],
+  "screenshots" : [ { "url":"app-screenshot-screen0.png" }, { "url":"app-screenshot-screen1.png" }, { "url":"app-screenshot-screen2.png" } ],
   "type": "clock",
   "tags": "clock,bluetooth,clkinfo",
   "supports" : ["BANGLEJS2"],  
