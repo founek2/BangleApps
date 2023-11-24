@@ -4,7 +4,9 @@
   "version":"0.01",
   "description": "Clock consisting of 3 screens, default is Clock, left with information widget and right screen controls Music (iOS)",
   "icon": "app.png",
-  "tags": "",
+  "screenshots" : [ { "url":"screenshot.png" } ],
+  "type": "clock",
+  "tags": "clock,bluetooth,clkinfo",
   "supports" : ["BANGLEJS2"],  
   "readme": "README.md",
   "storage": [
@@ -12,5 +14,6 @@
     {"name":"monty.img","url":"monty-icon.js", "evaluate":true}
   ],
   "dependencies" : { "clock_info":"module", "clkinfom": "module" },
-  "data": [{"name":"montyclock.json"}]
+  "data": [{"name":"montyclock.json"}],
+  "allow_emulator": true
 }

@@ -60,7 +60,7 @@
       8: [[9, 1, 82, 1, 90, 9, 90, 92, 82, 100, 9, 100, 1, 92, 1, 9], [22, 27, 69, 27, 69, 43, 22, 43], [22, 58, 69, 58, 69, 74, 22, 74]],
       9: [[9, 1, 82, 1, 90, 9, 90, 92, 82, 100, 9, 100, 1, 92, 1, 82, 9, 74, 69, 74, 69, 61, 9, 61, 1, 53, 1, 9], [22, 27, 69, 27, 69, 41, 22, 41]],
     };
-    let settings = require('Storage').readJSON('numerals.json', 1) || { color: 1, drawMode: "fill", showDate: 0 };
+    let settings = require('Storage').readJSON('montyclock.json', 1) || { color: 1, drawMode: "fill", showDate: 0 };
     const _12hour = (require("Storage").readJSON("setting.json", 1) || {})["12hour"] || false;
     let showed = false;
 
@@ -158,7 +158,7 @@
       // Play
       1: [[1, 3, 24, 15, 1, 28]]
     }
-    const state = { playing: 0, title: "", album: "", artist: "" }
+    const state = { playing: 0, title: "Disconnected", album: "", artist: "" }
     let showed = false;
 
     function drawSingleControl(num, col, x, y, func) {
@@ -341,7 +341,16 @@
     const show = function () {
       if (state.items.length == 0) {
         console.log("Loading widgets info")
-        const loadedInfo = require("clock_info").load();
+        let loadedInfo;
+        try {
+          loadedInfo = require("clock_info").load();
+        } catch (err) {
+          g.setFont("6x8", 2);
+          g.drawString("Failed to load", 5, 30)
+          g.drawString("module:", 5, 50)
+          g.drawString("clock_info", 5, 70)
+          return
+        }
 
         const items = loadedInfo[0].items
         const battery = items.find(i => i.name == "Battery");
