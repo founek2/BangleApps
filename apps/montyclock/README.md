@@ -6,7 +6,7 @@
 
 ## Usage and Features
 
-The consists of 3 screens:
+App consists of 3 screens:
 
 - default is Clock screen
   - on touch it displays current date for 4 seconds
