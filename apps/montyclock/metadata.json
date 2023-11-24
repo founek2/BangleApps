@@ -1,0 +1,16 @@
+{ "id": "montyclock",
+  "name": "monty clock",
+  "shortName":"monty",
+  "version":"0.01",
+  "description": "A detailed description of my great app",
+  "icon": "app.png",
+  "tags": "",
+  "supports" : ["BANGLEJS2"],  
+  "readme": "README.md",
+  "storage": [
+    {"name":"monty.app.js","url":"monty.app.js"},
+    {"name":"monty.img","url":"monty-icon.js", "evaluate":true}
+  ],
+  "dependencies" : { "clock_info":"module", "clkinfom": "module" },
+  "data": [{"name":"montyclock.json"}]
+}
