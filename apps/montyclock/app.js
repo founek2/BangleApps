@@ -157,7 +157,7 @@
       // Play
       1: [[1, 3, 24, 15, 1, 28]]
     }
-    const state = { playing: 0, title: "Disconnected", album: "", artist: "" }
+    const state = { playing: 0, title: "", album: "", artist: "" }
     let showed = false;
 
     function drawSingleControl(num, col, x, y, func) {
