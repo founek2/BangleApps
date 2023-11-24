@@ -122,8 +122,7 @@
     let timeout = 0;
     const enableRefresh = function () {
       draw()
-      const nextUpdateIn = (60 - new Date().getSeconds()) * 1000
-      timeout = setTimeout(enableRefresh, nextUpdateIn)
+      timeout = setTimeout(enableRefresh, 60000 - (Date.now() % 60000))
     }
 
     const show = function () {
