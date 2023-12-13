@@ -60,7 +60,7 @@
       8: [[9, 1, 82, 1, 90, 9, 90, 92, 82, 100, 9, 100, 1, 92, 1, 9], [22, 27, 69, 27, 69, 43, 22, 43], [22, 58, 69, 58, 69, 74, 22, 74]],
       9: [[9, 1, 82, 1, 90, 9, 90, 92, 82, 100, 9, 100, 1, 92, 1, 82, 9, 74, 69, 74, 69, 61, 9, 61, 1, 53, 1, 9], [22, 27, 69, 27, 69, 41, 22, 41]],
     };
-    let settings = require('Storage').readJSON('montyclock.json', 1) || { color: 1, drawMode: "fill", showDate: 0 };
+    let settings = require('Storage').readJSON('montyclock.json', 1) || { color: 1, drawMode: "fill", showDate: 1 };
     const _12hour = (require("Storage").readJSON("setting.json", 1) || {})["12hour"] || false;
     let showed = false;
 
@@ -86,7 +86,7 @@
     }
 
     let _showDate = false;
-    function draw() {
+    const draw = function () {
       g.clearRect(0, 24, 240, 240);
 
       const d = new Date();
@@ -110,12 +110,12 @@
       if (_showDate) return;
       _showDate = true;
 
-      hide()
       draw()
 
       setTimeout(() => {
         _showDate = false;
-        if (showed) show()
+        console.log("timeout")
+        if (showed) draw()
       }, 5000);
     }
 
@@ -167,7 +167,7 @@
       }
     }
 
-    function draw() {
+    const draw = function () {
       if (!showed) return;
       g.reset();
       g.clearRect(0, 24, 240, 240);
