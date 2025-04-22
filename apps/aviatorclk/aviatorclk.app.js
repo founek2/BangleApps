@@ -19,6 +19,7 @@ const APP_NAME = 'aviatorclk';
 const horizontalCenter = g.getWidth()/2;
 const mainTimeHeight = 38;
 const secondaryFontHeight = 22;
+require("Font8x16").add(Graphics); // tertiary font
 const dateColour = ( g.theme.dark ? COLOUR_YELLOW : COLOUR_BLUE );
 const UTCColour = ( g.theme.dark ? COLOUR_LIGHT_CYAN : COLOUR_DARK_CYAN );
 const separatorColour = ( g.theme.dark ? COLOUR_LIGHT_GREY : COLOUR_DARK_GREY );
@@ -37,6 +38,7 @@ var settings = Object.assign({
 var drawTimeout;
 var secondsInterval;
 var avwxTimeout;
+var gpsTimeout;
 
 var AVWXrequest;
 var METAR = '';
@@ -92,16 +94,51 @@ function drawAVWX() {
   if (! avwxTimeout) { avwxTimeout = setTimeout(updateAVWX, 5 * 60000); }
 }
 
+// show AVWX update status
+function showUpdateAVWXstatus(status) {
+  let y = Bangle.appRect.y + 10;
+  g.setBgColor(g.theme.bg);
+  g.clearRect(0, y, horizontalCenter - 54, y + 16);
+  if (status) {
+    g.setFontAlign(0, -1).setFont("8x16").setColor( g.theme.dark ? COLOUR_ORANGE : COLOUR_DARK_YELLOW );
+    g.drawString(status, horizontalCenter - 71, y, true);
+  }
+}
+
+// re-try if the GPS doesn't return a fix in time
+function GPStookTooLong() {
+  Bangle.setGPSPower(false, APP_NAME);
+  if (gpsTimeout) clearTimeout(gpsTimeout);
+  gpsTimeout = undefined;
+
+  showUpdateAVWXstatus('X');
+
+  if (! avwxTimeout) { avwxTimeout = setTimeout(updateAVWX, 5 * 60000); }
+}
+
 // update the METAR info
 function updateAVWX() {
   if (avwxTimeout) clearTimeout(avwxTimeout);
   avwxTimeout = undefined;
+  if (gpsTimeout) clearTimeout(gpsTimeout);
+  gpsTimeout = undefined;
 
-  METAR = '\nGetting GPS fix';
-  METARlinesCount = 0; METARscollLines = 0;
-  METARts = undefined;
+  if (! NRF.getSecurityStatus().connected) {
+    // if Bluetooth is NOT connected, try again in 5min
+    showUpdateAVWXstatus('X');
+    avwxTimeout = setTimeout(updateAVWX, 5 * 60000);
+    return;
+  }
+
+  showUpdateAVWXstatus('GPS');
+  if (! METAR) {
+    METAR = '\nUpdating METAR';
+    METARlinesCount = 0; METARscollLines = 0;
+    METARts = undefined;
+  }
   drawAVWX();
 
+  gpsTimeout = setTimeout(GPStookTooLong, 30 * 60000);
   Bangle.setGPSPower(true, APP_NAME);
   Bangle.on('GPS', fix => {
     // prevent multiple, simultaneous requests
@@ -109,12 +146,18 @@ function updateAVWX() {
 
     if ('fix' in fix && fix.fix != 0 && fix.satellites >= 4) {
       Bangle.setGPSPower(false, APP_NAME);
+      if (gpsTimeout) clearTimeout(gpsTimeout);
+      gpsTimeout = undefined;
+
       let lat = fix.lat;
       let lon = fix.lon;
 
-      METAR = '\nRequesting METAR';
-      METARlinesCount = 0; METARscollLines = 0;
-      METARts = undefined;
+      showUpdateAVWXstatus('AVWX');
+      if (! METAR) {
+        METAR = '\nUpdating METAR';
+        METARlinesCount = 0; METARscollLines = 0;
+        METARts = undefined;
+      }
       drawAVWX();
 
       // get latest METAR from nearest airport (via AVWX API)
@@ -146,6 +189,7 @@ function updateAVWX() {
           METARts = undefined;
         }
 
+        showUpdateAVWXstatus('');
         drawAVWX();
         AVWXrequest = undefined;
 
@@ -155,6 +199,7 @@ function updateAVWX() {
         METAR = 'ERR: ' + error;
         METARlinesCount = 0; METARscollLines = 0;
         METARts = undefined;
+        showUpdateAVWXstatus('');
         drawAVWX();
         AVWXrequest = undefined;
       });
@@ -169,6 +214,7 @@ function drawSeconds() {
   let seconds = now.getSeconds().toString();
   if (seconds.length == 1) seconds = '0' + seconds;
   let y = Bangle.appRect.y + mainTimeHeight - 3;
+  g.setBgColor(g.theme.bg);
   g.setFontAlign(-1, 1).setFont("Vector", secondaryFontHeight).setColor(COLOUR_GREY);
   g.drawString(seconds, horizontalCenter + 54, y, true);
 }
@@ -232,10 +278,10 @@ function draw() {
 // initialise
 g.clear(true);
 
-// scroll METAR lines on taps
-Bangle.setUI("clockupdown", action => {
+// scroll METAR lines (either by touch or tap)
+function scrollAVWX(action) {
   switch (action) {
-    case -1:  // top tap
+    case -1:  // top touch/tap
       if (settings.invertScrolling) {
         if (METARscollLines > 0)
           METARscollLines--;
@@ -244,7 +290,7 @@ Bangle.setUI("clockupdown", action => {
           METARscollLines++;
       }
       break;
-    case 1:   // bottom tap
+    case 1:   // bottom touch/tap
       if (settings.invertScrolling) {
         if (METARscollLines < METARlinesCount - 4)
           METARscollLines++;
@@ -254,17 +300,47 @@ Bangle.setUI("clockupdown", action => {
       }
       break;
     default:
-      // ignore
+      // ignore other actions
   }
   drawAVWX();
+}
+
+Bangle.on('tap', data => {
+  switch (data.dir) {
+    case 'top':
+      scrollAVWX(-1);
+      break;
+    case 'bottom':
+      scrollAVWX(1);
+      break;
+    case 'front':
+      // toggle seconds display on double tap on front/watch-face
+      // (if watch is un-locked)
+      if (data.double && ! Bangle.isLocked()) {
+        if (settings.showSeconds) {
+          clearInterval(secondsInterval);
+          let y = Bangle.appRect.y + mainTimeHeight - 3;
+          g.clearRect(horizontalCenter + 54, y - secondaryFontHeight, g.getWidth(), y);
+          settings.showSeconds = false;
+        } else {
+          settings.showSeconds = true;
+          syncSecondsUpdate();
+        }
+      }
+      break;
+    default:
+      // ignore other taps
+  }
 });
+
+Bangle.setUI("clockupdown", scrollAVWX);
 
 // load widgets
 Bangle.loadWidgets();
 Bangle.drawWidgets();
 
 // draw static separator line
-y = Bangle.appRect.y + mainTimeHeight + secondaryFontHeight;
+let y = Bangle.appRect.y + mainTimeHeight + secondaryFontHeight;
 g.setColor(separatorColour);
 g.drawLine(0, y, g.getWidth(), y);
 
@@ -276,8 +352,8 @@ updateAVWX();
 
 
 // TMP for debugging:
-//METAR = 'YAAA 011100Z 21014KT CAVOK 23/08 Q1018 RMK RF000/0000';
-//METAR = 'YAAA 150900Z 14012KT 9999 SCT045 BKN064 26/14 Q1012 RMK RF000/0000 DL-W/DL-NW';
-//METAR = 'YAAA 020030Z VRB CAVOK';
+//METAR = 'YAAA 011100Z 21014KT CAVOK 23/08 Q1018 RMK RF000/0000'; drawAVWX();
+//METAR = 'YAAA 150900Z 14012KT 9999 SCT045 BKN064 26/14 Q1012 RMK RF000/0000 DL-W/DL-NW'; drawAVWX();
+//METAR = 'YAAA 020030Z VRB CAVOK'; drawAVWX();
 //METARts = new Date(Date.now() - 61 * 60000);   // 61 to trigger warning, 91 to trigger alert
 

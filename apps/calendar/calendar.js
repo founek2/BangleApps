@@ -33,7 +33,6 @@ const timeutils = require("time_utils");
 let startOnSun = ((require("Storage").readJSON("setting.json", true) || {}).firstDayOfWeek || 0) === 0;
 let events;
 const dowLbls = function() {
-  const locale = require('locale').name;
   const days = startOnSun ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5, 6, 0];
   const d = new Date();
   return days.map(i => {
@@ -60,6 +59,14 @@ const loadEvents = () => {
     date.setMinutes(time.m);
     date.setSeconds(time.s);
     return {date: date, msg: a.msg, type: "e"};
+  }));
+  // all events synchronized from Gadgetbridge
+  events = events.concat((require("Storage").readJSON("android.calendar.json",1) || []).map(a => {
+    // All-day events always start at 00:00:00 UTC, so we need to "undo" the
+    // timezone offsetting to make sure that the day is correct.
+    const offset = a.allDay ? new Date().getTimezoneOffset() * 60 : 0
+    const date = new Date((a.timestamp+offset) * 1000);
+    return {date: date, msg: a.title, type: a.allDay ? "o" : "e"};
   }));
 };
 
@@ -99,7 +106,7 @@ const sameDay = function(d1, d2) {
 const drawEvent = function(ev, curDay, x1, y1, x2, y2) {
   "ram";
   switch(ev.type) {
-    case "e": // alarm/event
+    case "e": { // alarm/event
       const hour = 0|ev.date.getHours() + 0|ev.date.getMinutes()/60.0;
       const slice = hour/24*(eventsPerDay-1); // slice 0 for 0:00 up to eventsPerDay for 23:59
       const height = (y2-2) - (y1+2); // height of a cell
@@ -107,6 +114,7 @@ const drawEvent = function(ev, curDay, x1, y1, x2, y2) {
       const ystart = (y1+2) + slice*sliceHeight;
       g.setColor(bgEvent).fillRect(x1+1, ystart, x2-2, ystart+sliceHeight);
       break;
+    }
     case "h": // holiday
       g.setColor(bgColorWeekend).fillRect(x1+1, y1+1, x2-1, y2-1);
       break;
@@ -122,7 +130,6 @@ const calcDays = (month, monthMaxDayMap, dowNorm) => {
   const days = [];
   let nextMonthDay = 1;
   let thisMonthDay = 51;
-  const month2 = month;
   let prevMonthDay = monthMaxDayMap[month > 0 ? month - 1 : 11] - dowNorm + 1;
 
   for (let i = 0; i < maxDay; i++) {
@@ -222,8 +229,8 @@ const drawCalendar = function(date) {
   }, []);
   let i = 0;
   g.setFont("8x12", fontSize);
-  for (y = 0; y < rowN - 1; y++) {
-    for (x = 0; x < colN; x++) {
+  for (let y = 0; y < rowN - 1; y++) {
+    for (let x = 0; x < colN; x++) {
       i++;
       const day = days[i];
       const curMonth = day < 15 ? month+1 : day < 50 ? month-1 : month;
